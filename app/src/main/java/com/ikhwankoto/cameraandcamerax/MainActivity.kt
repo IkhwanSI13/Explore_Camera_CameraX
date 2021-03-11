@@ -1,10 +1,10 @@
 package com.ikhwankoto.cameraandcamerax
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.ikhwankoto.cameraandcamerax.cameraIntent.SimpleCameraActivity
+import androidx.appcompat.app.AppCompatActivity
 import com.ikhwankoto.cameraandcamerax.cameraX.CameraXActivity
+import com.ikhwankoto.cameraandcamerax.cameraIntent.SimpleCameraActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
