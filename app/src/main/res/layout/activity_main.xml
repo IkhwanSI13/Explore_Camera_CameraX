@@ -29,4 +29,11 @@
         android:layout_marginTop="8dp"
         android:text="Click for Camera X" />
 
+    <Button
+        android:id="@+id/btn_camera_x_detectText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Click for Camera X - DetectText" />
+
 </LinearLayout>

@@ -1,4 +1,4 @@
-package com.ikhwankoto.cameraandcamerax.cameraX
+package com.ikhwankoto.cameraandcamerax.useCase.cameraX
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -154,9 +154,11 @@ class CameraXActivity : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults:
-        IntArray
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()

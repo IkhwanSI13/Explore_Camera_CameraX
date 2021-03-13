@@ -1,4 +1,4 @@
-package com.ikhwankoto.cameraandcamerax.cameraX
+package com.ikhwankoto.cameraandcamerax.useCase.cameraX
 
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy

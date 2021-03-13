@@ -1,4 +1,4 @@
-package com.ikhwankoto.cameraandcamerax.cameraIntent
+package com.ikhwankoto.cameraandcamerax.useCase.cameraIntent
 
 import android.Manifest
 import android.app.Activity
@@ -14,7 +14,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.ikhwankoto.cameraandcamerax.R
 import kotlinx.android.synthetic.main.activity_simple_camera.*
-import java.io.FileNotFoundException
 
 class SimpleCameraActivity : AppCompatActivity() {
 
@@ -57,8 +56,10 @@ class SimpleCameraActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
-        permissions: Array<String>, grantResults: IntArray
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             MY_CAMERA_PERMISSION_CODE -> {
                 if ((grantResults.isNotEmpty() && grantResults[0]
