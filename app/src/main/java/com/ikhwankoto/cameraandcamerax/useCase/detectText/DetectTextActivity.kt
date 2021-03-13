@@ -39,25 +39,24 @@ class DetectTextActivity : AppCompatActivity() {
         const val DESIRED_WIDTH_CROP_PERCENT = 8
         const val DESIRED_HEIGHT_CROP_PERCENT = 74
 
-        // This is an arbitrary number we are using to keep tab of the permission
-        // request. Where an app has multiple context for requesting permission,
-        // this can help differentiate the different contexts
+        // Permission
         private const val REQUEST_CODE_PERMISSIONS = 10
-
-        // This is an array of all the permission specified in the manifest
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+
         private const val RATIO_4_3_VALUE = 4.0 / 3.0
         private const val RATIO_16_9_VALUE = 16.0 / 9.0
-        private const val TAG = "MainFragment"
+        private const val TAG = "Ikhwan"
     }
 
     private var displayId: Int = -1
     private lateinit var viewModel: DetectTextModel
+
+    /** CAMERA X */
     private var cameraProvider: ProcessCameraProvider? = null
     private var camera: Camera? = null
     private var imageAnalyzer: ImageAnalysis? = null
 
-    /** Blocking camera operations are performed using this executor */
+    /** CAMERA X | Blocking camera operations are performed using this executor */
     private lateinit var cameraExecutor: ExecutorService
 
     private lateinit var scopedExecutor: ScopedExecutor
@@ -88,27 +87,17 @@ class DetectTextActivity : AppCompatActivity() {
 
         // Get available language list and set up the target language spinner
         // with default selections.
-        val adapter = ArrayAdapter(
-            this,
-            android.R.layout.simple_spinner_dropdown_item, viewModel.availableLanguages
-        )
+        setUpTranslationSpinner()
 
-        targetLangSelector.adapter = adapter
-        targetLangSelector.setSelection(adapter.getPosition(Language("en")))
-        targetLangSelector.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>,
-                view: View?,
-                position: Int,
-                id: Long
-            ) {
-                viewModel.targetLang.value = adapter.getItem(position)
-            }
+        // UI - Text result
+        viewModel.sourceText.observe(this, Observer {
+            srcText.text = it
+        })
 
-            override fun onNothingSelected(parent: AdapterView<*>) {}
-        }
-
+        // UI - Source Language
         viewModel.sourceLang.observe(this, Observer { srcLang.text = it.displayName })
+
+        // UI - Translated Text
         viewModel.translatedText.observe(this, Observer { resultOrError ->
             resultOrError?.let {
                 if (it.error != null) {
@@ -118,6 +107,8 @@ class DetectTextActivity : AppCompatActivity() {
                 }
             }
         })
+
+        // UI - Model Download Status
         viewModel.modelDownloading.observe(this, Observer { isDownloading ->
             progressBar.visibility = if (isDownloading) {
                 View.VISIBLE
@@ -127,6 +118,7 @@ class DetectTextActivity : AppCompatActivity() {
             progressText.visibility = progressBar.visibility
         })
 
+        // UI - Extra layer above camera preview, for show a box and guide text
         overlay.apply {
             setZOrderOnTop(true)
             holder.setFormat(PixelFormat.TRANSPARENT)
@@ -156,83 +148,25 @@ class DetectTextActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        // Shut down our background executor
-        cameraExecutor.shutdown()
-        scopedExecutor.shutdown()
+    private fun setUpTranslationSpinner() {
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item, viewModel.availableLanguages
+        )
 
-        super.onDestroy()
-    }
-
-
-
-    /** CameraX, and prepare to bind the camera use cases  */
-    private fun setUpCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener(Runnable {
-
-            // CameraProvider
-            cameraProvider = cameraProviderFuture.get()
-
-            // Build and bind the camera use cases
-            bindCameraUseCases()
-        }, ContextCompat.getMainExecutor(this))
-    }
-
-    private fun bindCameraUseCases() {
-        val cameraProvider = cameraProvider
-            ?: throw IllegalStateException("Camera initialization failed.")
-
-        // Get screen metrics used to setup camera for full screen resolution
-        val metrics = DisplayMetrics().also { viewfinder.display.getRealMetrics(it) }
-        Log.d(TAG, "Screen metrics: ${metrics.widthPixels} x ${metrics.heightPixels}")
-
-        val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
-        Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
-
-        val rotation = viewfinder.display.rotation
-
-        val preview = Preview.Builder()
-            .setTargetAspectRatio(screenAspectRatio)
-            .setTargetRotation(rotation)
-            .build()
-
-        // Build the image analysis use case and instantiate our analyzer
-        imageAnalyzer = ImageAnalysis.Builder()
-            // We request aspect ratio but no resolution
-            .setTargetAspectRatio(screenAspectRatio)
-            .setTargetRotation(rotation)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also {
-                it.setAnalyzer(
-                    cameraExecutor, TextAnalyzer(
-                        this,
-                        lifecycle,
-                        viewModel.sourceText,
-                        viewModel.imageCropPercentages
-                    )
-                )
+        targetLangSelector.adapter = adapter
+        targetLangSelector.setSelection(adapter.getPosition(Language("en")))
+        targetLangSelector.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                viewModel.targetLang.value = adapter.getItem(position)
             }
-        viewModel.sourceText.observe(this, Observer { srcText.text = it })
-        viewModel.imageCropPercentages.observe(this,
-            Observer { drawOverlay(overlay.holder, it.first, it.second) })
 
-        // Select back camera since text detection does not work with front camera
-        val cameraSelector =
-            CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
-
-        try {
-            // Unbind use cases before rebinding
-            cameraProvider.unbindAll()
-
-            // Bind use cases to camera
-            camera = cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview, imageAnalyzer
-            )
-            preview.setSurfaceProvider(viewfinder.createSurfaceProvider())
-        } catch (exc: IllegalStateException) {
-            Log.e(TAG, "Use case binding failed. This must be running on main thread.", exc)
+            override fun onNothingSelected(parent: AdapterView<*>) {}
         }
     }
 
@@ -281,6 +215,85 @@ class DetectTextActivity : AppCompatActivity() {
         val textY = rectBottom + textBounds.height() + 15f // put text below rect and 15f padding
         canvas.drawText(getString(R.string.overlay_help), textX, textY, textPaint)
         holder.unlockCanvasAndPost(canvas)
+    }
+
+    override fun onDestroy() {
+        // Shut down our background executor
+        cameraExecutor.shutdown()
+        scopedExecutor.shutdown()
+
+        super.onDestroy()
+    }
+
+    /** CameraX, and prepare to bind the camera use cases  */
+    private fun setUpCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener(Runnable {
+
+            // CameraProvider
+            cameraProvider = cameraProviderFuture.get()
+
+            // Build and bind the camera use cases
+            bindCameraUseCases()
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun bindCameraUseCases() {
+        val cameraProvider = cameraProvider
+            ?: throw IllegalStateException("Camera initialization failed.")
+
+        // Get screen metrics used to setup camera for full screen resolution
+        val metrics = DisplayMetrics().also { viewfinder.display.getRealMetrics(it) }
+        Log.d(TAG, "Screen metrics: ${metrics.widthPixels} x ${metrics.heightPixels}")
+
+        val screenAspectRatio = aspectRatio(metrics.widthPixels, metrics.heightPixels)
+        Log.d(TAG, "Preview aspect ratio: $screenAspectRatio")
+
+        val rotation = viewfinder.display.rotation
+
+        val preview = Preview.Builder()
+            .setTargetAspectRatio(screenAspectRatio)
+            .setTargetRotation(rotation)
+            .build()
+
+        // Build the image analysis use case and instantiate our analyzer
+        imageAnalyzer = ImageAnalysis.Builder()
+            // We request aspect ratio but no resolution
+            .setTargetAspectRatio(screenAspectRatio)
+            .setTargetRotation(rotation)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also {
+                /** TextAnalyzer will trigger viewModel.sourceText for the result */
+                it.setAnalyzer(
+                    cameraExecutor, TextAnalyzer(
+                        this,
+                        lifecycle,
+                        viewModel.sourceText,
+                        viewModel.imageCropPercentages
+                    )
+                )
+            }
+
+        viewModel.imageCropPercentages.observe(this,
+            Observer { drawOverlay(overlay.holder, it.first, it.second) })
+
+        // Select back camera since text detection does not work with front camera
+        val cameraSelector =
+            CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+
+        try {
+            // Unbind use cases before rebinding
+            cameraProvider.unbindAll()
+
+            // Bind use cases to camera
+            camera = cameraProvider.bindToLifecycle(
+                this, cameraSelector, preview, imageAnalyzer
+            )
+            preview.setSurfaceProvider(viewfinder.createSurfaceProvider())
+        } catch (exc: IllegalStateException) {
+            Log.e(TAG, "Use case binding failed. This must be running on main thread.", exc)
+        }
     }
 
     /**
