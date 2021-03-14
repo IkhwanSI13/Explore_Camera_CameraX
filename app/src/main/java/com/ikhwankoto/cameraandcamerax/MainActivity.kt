@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.ikhwankoto.cameraandcamerax.useCase.cameraIntent.SimpleCameraActivity
 import com.ikhwankoto.cameraandcamerax.useCase.cameraX.CameraXActivity
+import com.ikhwankoto.cameraandcamerax.useCase.detectFromPicture.DetectFromPictureActivity
 import com.ikhwankoto.cameraandcamerax.useCase.detectText.DetectTextActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -24,6 +25,10 @@ class MainActivity : AppCompatActivity() {
 
         btn_camera_x_detectText.setOnClickListener {
             startActivity(Intent(this, DetectTextActivity::class.java))
+        }
+
+        btn_detect.setOnClickListener {
+            startActivity(Intent(this, DetectFromPictureActivity::class.java))
         }
     }
 

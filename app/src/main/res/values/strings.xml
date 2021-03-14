@@ -4,4 +4,10 @@
     <string name="content_description_google_translate_attribution">Google Translate attribution</string>
     <string name="overlay_help">Center text in box</string>
     <string name="downloading_model_files">Downloading model files...</string>
+
+    <string name="select_image_for_text_recognition">Select image for text recognition</string>
+    <string name="find_text_button">Find text</string>
+    <string name="find_face_contour_button">Find face contour</string>
+    <string name="find_text_cloud_button">Find text (cloud)</string>
+    <string name="find_objects_button">Find objects</string>
 </resources>

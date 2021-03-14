@@ -34,6 +34,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Click for Camera X - DetectText" />
+        android:text="Click for Camera X - [Live] Detect Text &amp; Translate" />
+
+    <Button
+        android:id="@+id/btn_detect"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Click for Detect Text / Face from picture" />
 
 </LinearLayout>
